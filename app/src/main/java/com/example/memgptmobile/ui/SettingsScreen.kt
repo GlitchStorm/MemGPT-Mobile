@@ -32,6 +32,7 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
     var userID: String by remember { mutableStateOf("")}
     var agentID: String by remember { mutableStateOf("")}
     var bearerToken: String by remember { mutableStateOf("")}
+    var apiKey: String? by remember { mutableStateOf("")}
 
     LaunchedEffect(Unit) {
         ipAddress = settingsViewModel.settingsRepository.getIpAddress()
@@ -39,6 +40,7 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
         userID = settingsViewModel.settingsRepository.getUserID()
         agentID = settingsViewModel.settingsRepository.getAgentID()
         bearerToken = settingsViewModel.settingsRepository.getBearerToken()
+        apiKey = settingsViewModel.settingsRepository.getApiKey()
     }
     // Scaffold offers a consistent structure for topBar, content, floatingActionButton, etc.
     ModalNavigationDrawer(
@@ -137,10 +139,18 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
                     label = { Text("Bearer Token") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = apiKey ?: "",
+                    onValueChange = { apiKey = it },
+                    label = { Text("API Key") },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        settingsViewModel.settingsRepository.saveApiSettings(ipAddress, port)
+                        settingsViewModel.settingsRepository.saveApiSettings(ipAddress, port, userID, agentID)
+                        settingsViewModel.settingsRepository.saveApiKey(apiKey?: "")
                     },
                     modifier = Modifier.align(Alignment.End)
                 ) {

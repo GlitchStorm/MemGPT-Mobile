@@ -57,6 +57,14 @@ import kotlinx.coroutines.CoroutineScope
 
 data class Message(val id: String, val content: String, val type: MessageType)
 
+val LightBlue = Color(0xFFD7E8FA)
+val DarkBlue = Color(0xFF2C3E50)
+val LightGray = Color(0xFFF2F2F2)
+val DarkGray = Color(0xFF333333)
+val Green = Color(0xFF27AE60)
+val Red = Color(0xFFC0392B)
+
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,14 +143,18 @@ fun MessageView(message: com.example.memgptmobile.viewmodel.Message){
             modifier = Modifier
                 .background(
                     color = when (message.type) {
-                        MessageType.USER -> Color.Blue
-                        MessageType.AI -> Color.Green
-                        MessageType.AI_THOUGHT -> Color.Gray
+                        MessageType.USER -> DarkBlue
+                        MessageType.AI -> Green
+                        MessageType.AI_THOUGHT -> LightBlue
                     },
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(8.dp),
-            color = Color.White
+            color = when (message.type) {
+                MessageType.USER -> Color.White
+                MessageType.AI -> Color.White
+                else -> Color.DarkGray
+            }
         )
     }
 }

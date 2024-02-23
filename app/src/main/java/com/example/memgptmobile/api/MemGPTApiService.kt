@@ -7,17 +7,27 @@ import retrofit2.http.POST
 import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.Response
+import com.example.memgptmobile.viewmodel.SettingsViewModel
 
 interface MemGPTApiService {
     @POST("api/agents/message") // Use the correct endpoint
     @Headers(
         "accept: application/json",
-        "Content-Type: application/json",
+        "Content-Type: application/json"
     )
     suspend fun sendMessage(
-        //@Body payload: ChatRequest // Assuming you send a prompt in the request body
+        @Body payload: ChatRequest
     ): Response<ChatResponse>
 
     @GET("api/auth") // Use the correct endpoint
     suspend fun authenticateUser(): Response<AuthResponse>
+
+    @POST("admin/users/keys")
+    @Headers(
+        "accept: application/json",
+        "Content-Type: application/json"
+    )
+    suspend fun getApiKey(
+        @Body payload: ApiKeyRequest
+    ): Response<ApiKeyResponse>
 }
