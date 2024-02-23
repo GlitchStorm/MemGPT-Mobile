@@ -55,16 +55,6 @@ class ChatViewModel @Inject constructor(
     fun sendMessage(message: String) {
         Log.d("ChatViewModel", "Sending message...")
         _chatMessages.value = _chatMessages.value + Message(content = message, type = MessageType.USER)
-        // Fetch user and agent IDs from the settings repository
-        val userId = settingsRepository.getUserID()
-        val agentId = settingsRepository.getAgentID()
-
-        val request = ChatRequest(
-            agent_id = agentId,
-            message = message,
-            role = "user",
-            stream = false
-        )
 
         viewModelScope.launch {
             val apiKey = settingsRepository.getApiKey()

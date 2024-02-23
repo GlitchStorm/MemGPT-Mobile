@@ -11,8 +11,6 @@ import javax.inject.Inject
 class SettingsRepository @Inject constructor (private val context: Context) {
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
     private val _apiBaseUrl = MutableStateFlow("http://localhost:8283")
-    private val _showInternalMonologue = MutableStateFlow(getShowInternalMonologue())
-    val showInternalMonologue: StateFlow<Boolean> = _showInternalMonologue.asStateFlow()
     val apiBaseUrl: StateFlow<String> = _apiBaseUrl.asStateFlow()
 
     fun saveShowInternalMonologue(show: Boolean) {

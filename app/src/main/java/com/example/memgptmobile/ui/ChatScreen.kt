@@ -75,7 +75,6 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    navController: NavController,
     chatViewModel: ChatViewModel,
     settingsViewModel: SettingsViewModel,
     drawerState: DrawerState,
