@@ -41,7 +41,7 @@ fun AppNavigation() {
     ) {
         NavHost(navController = navController, startDestination = "chat") {
             composable(route = "chat") {
-                ChatScreen(navController = navController, chatViewModel = chatViewModel, drawerState = drawerState, scope = scope)
+                ChatScreen(navController = navController, chatViewModel = chatViewModel, settingsViewModel = settingsViewModel, drawerState = drawerState, scope = scope)
             }
             composable(route = "settings") {
                 SettingsScreen(navController = navController, settingsViewModel = settingsViewModel, drawerState = drawerState, scope = scope)

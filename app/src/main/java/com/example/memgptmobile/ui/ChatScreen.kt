@@ -1,59 +1,53 @@
 package com.example.memgptmobile.ui
 
 import android.os.Bundle
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.memgptmobile.ui.theme.MemGPTMobileTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.*
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.memgptmobile.ui.theme.MemGPTMobileTheme
 import com.example.memgptmobile.viewmodel.ChatViewModel
 import com.example.memgptmobile.viewmodel.MessageType
 import com.example.memgptmobile.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 data class Message(val id: String, val content: String, val type: MessageType)
 
@@ -80,7 +74,13 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(navController: NavController, chatViewModel: ChatViewModel, drawerState: DrawerState, scope: CoroutineScope) {
+fun ChatScreen(
+    navController: NavController,
+    chatViewModel: ChatViewModel,
+    settingsViewModel: SettingsViewModel,
+    drawerState: DrawerState,
+    scope: CoroutineScope
+) {
     var currentMessage by remember { mutableStateOf("") }
     val chatMessages = chatViewModel.chatMessages.collectAsState()
     Scaffold(
@@ -97,7 +97,13 @@ fun ChatScreen(navController: NavController, chatViewModel: ChatViewModel, drawe
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             // Display the list of chat messages
-            ChatMessagesList(messages = chatMessages, modifier = Modifier.weight(1f).fillMaxWidth())
+            ChatMessagesList(
+                messages = chatMessages,
+                settingsViewModel.getShowInternalMonologue(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
 
             // Area for sending new messages
             SendMessageArea(
@@ -113,9 +119,20 @@ fun ChatScreen(navController: NavController, chatViewModel: ChatViewModel, drawe
 }
 
 @Composable
-fun  ChatMessagesList(messages: State<List<com.example.memgptmobile.viewmodel.Message>>, modifier: Modifier = Modifier){
+fun ChatMessagesList(
+    messages: State<List<com.example.memgptmobile.viewmodel.Message>>,
+    showInternalMonologue: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val filteredMessages = remember(messages.value, showInternalMonologue) {
+        if (showInternalMonologue) {
+            messages.value
+        } else {
+            messages.value.filter { it.type != MessageType.AI_THOUGHT }
+        }
+    }
     LazyColumn(modifier = modifier) {
-        items(items = messages.value, key = {message ->
+        items(items = filteredMessages, key = { message ->
             message.id
         }) { message ->
             MessageView(message)
@@ -128,34 +145,42 @@ fun  ChatMessagesList(messages: State<List<com.example.memgptmobile.viewmodel.Me
 //}
 
 @Composable
-fun MessageView(message: com.example.memgptmobile.viewmodel.Message){
+fun MessageView(message: com.example.memgptmobile.viewmodel.Message) {
+    val maxWidthPercent = 0.8f // Bubbles will take up to 80% of the screen width
+    val alignment = when (message.type) {
+        MessageType.USER -> Alignment.CenterEnd
+        else -> Alignment.CenterStart
+    }
+    val backgroundColor = when (message.type) {
+        MessageType.USER -> DarkBlue
+        MessageType.AI -> Green
+        MessageType.AI_THOUGHT -> Color(0xFFD7E8FA) // A softer light blue
+    }
+    val textColor = when (message.type) {
+        MessageType.USER -> Color.White
+        MessageType.AI -> Color.White
+        MessageType.AI_THOUGHT -> Color.DarkGray
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        contentAlignment = when(message.type){
-            MessageType.USER -> Alignment.CenterEnd
-            else -> Alignment.CenterStart
-        }
+            .padding(horizontal = 8.dp, vertical = 4.dp), // Reduced vertical padding
+        contentAlignment = alignment
     ) {
         Text(
             text = message.content,
             modifier = Modifier
                 .background(
-                    color = when (message.type) {
-                        MessageType.USER -> DarkBlue
-                        MessageType.AI -> Green
-                        MessageType.AI_THOUGHT -> LightBlue
-                    },
-                    shape = RoundedCornerShape(8.dp)
+                    color = backgroundColor,
+                    shape = RoundedCornerShape(12.dp) // Slightly larger corner rounding
                 )
-                .padding(8.dp),
-            color = when (message.type) {
-                MessageType.USER -> Color.White
-                MessageType.AI -> Color.White
-                else -> Color.DarkGray
-            }
+                .padding(12.dp) // Increased internal padding for a less blocky look
+                .widthIn(max = (maxWidthPercent * LocalConfiguration.current.screenWidthDp).dp), // Max width constraint
+            color = textColor,
+            style = MaterialTheme.typography.bodyMedium
         )
+        // Tail implementation can be added here if desired
     }
 }
 
