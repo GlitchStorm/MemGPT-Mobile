@@ -7,6 +7,7 @@ import com.example.memgptmobile.api.ApiKeyRequest
 import com.example.memgptmobile.api.ChatRequest
 import com.example.memgptmobile.api.MemGPTApiService
 import com.example.memgptmobile.api.RetrofitManager
+import com.example.memgptmobile.debug.Logger.logToFile
 import com.example.memgptmobile.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,18 +43,22 @@ class ChatViewModel @Inject constructor(
                     // Handle successful authentication
                     val authResponse = response.body()!!
                     Log.d("AuthTest", "UUID: ${authResponse.uuid}")
+                    logToFile("AuthTest", "UUID: ${authResponse.uuid}")
                 } else {
                     // Handle API error
                     Log.d("AuthTest", "Error: ${response.errorBody()?.string()}")
+                    logToFile("AuthTest", "Error: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 // Handle network or other errors
                 Log.e("AuthTest", "Exception", e)
+                logToFile("AuthTest", "Exception: ${e.message}")
             }
         }
     }
     fun sendMessage(message: String) {
         Log.d("ChatViewModel", "Sending message...")
+        logToFile("ChatViewModel", "Sending message: $message")
         _chatMessages.value = _chatMessages.value + Message(content = message, type = MessageType.USER)
 
         viewModelScope.launch {
@@ -70,10 +75,12 @@ class ChatViewModel @Inject constructor(
                         sendActualMessage(message)
                     } else {
                         Log.e("ChatViewModel", "Failed to retrieve API Key")
+                        logToFile("ChatViewModel", "Failed to retrieve API Key")
                         // Handle the failure to retrieve the API key (e.g., show an error to the user)
                     }
                 } catch (e: Exception) {
                     Log.e("ChatViewModel", "Error retrieving API Key", e)
+                    logToFile("ChatViewModel", "Error retrieving API Key: ${e.message}")
                     // Handle network or other errors
                 }
             } else {
@@ -96,6 +103,7 @@ class ChatViewModel @Inject constructor(
         val response = retrofitManager.apiService.sendMessage(payload = request)
         if (response.isSuccessful && response.body() != null) {
             Log.d("ApiResponse", response.body().toString())
+            logToFile("ApiResponse", response.body().toString())
             response.body()!!.messages.forEach { content ->
                 content.internalMonologue?.let {
                     _chatMessages.value = _chatMessages.value + Message(it, MessageType.AI_THOUGHT)
@@ -107,6 +115,7 @@ class ChatViewModel @Inject constructor(
         } else {
             // Consider adding error handling or logging here
             Log.e("ChatViewModel", "Failed to send message")
+            logToFile("ChatViewModel", "Failed to send message")
             // Here you could update the UI to reflect the failure to send the message
         }
     }
